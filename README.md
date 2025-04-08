@@ -69,7 +69,6 @@ A C++ project for managing historical events using linked lists.
 ### Using G++
 ```bash
 g++ -o historical_events src/*.cpp -I include/
-./historical_events
 ```
 
 ## Documentation
