@@ -1,5 +1,8 @@
 #include "../include/LinkedList.h"
 #include <iostream>
+#include <fstream>
+
+using namespace std;
 
 LinkedList::LinkedList() : head(nullptr), tail(nullptr), size(0), ascendingOrder(true) {}
 
@@ -51,6 +54,15 @@ void LinkedList::addByDate(const Event& event) {
 }
 
 void LinkedList::insertSorted(Node* newNode) {
+    if (!newNode) return;
+
+    // If list is empty
+    if (!head) {
+        head = tail = newNode;
+        newNode->next = newNode->prev = nullptr;
+        return;
+    }
+
     Node* current = head;
     
     while (current) {
@@ -73,14 +85,20 @@ void LinkedList::insertSorted(Node* newNode) {
             current->prev = newNode;
             return;
         }
+        
+        if (!current->next) {
+            current->next = newNode;
+            newNode->prev = current;
+            newNode->next = nullptr;
+            tail = newNode;
+            return;
+        }
+        
         current = current->next;
     }
-    
-    addAtEnd(newNode->data);
-    delete newNode;
 }
 
-void LinkedList::deleteEvent(const std::string& title) {
+void LinkedList::deleteEvent(const  string& title) {
     Node* current = head;
     while (current) {
         if (current->data.title == title) {
@@ -89,7 +107,7 @@ void LinkedList::deleteEvent(const std::string& title) {
         }
         current = current->next;
     }
-    std::cout << "Event not found!" << std::endl;
+    cout << "Event not found!" << endl;
 }
 
 void LinkedList::deleteNode(Node* node) {
@@ -109,49 +127,49 @@ void LinkedList::deleteNode(Node* node) {
     size--;
 }
 
-void LinkedList::editEvent(const std::string& title) {
+void LinkedList::editEvent(const string& title) {
     Node* current = head;
     while (current) {
         if (current->data.title == title) {
             int year, month;
-            std::string newTitle, topic, location, leader, result;
+            string newTitle, topic, location, leader, result;
             bool isVictory;
             int accessLevel;
-            std::vector<std::string> participants;
+            vector<string> participants;
             
-            std::cout << "Enter new year: ";
-            std::cin >> year;
-            std::cout << "Enter new month: ";
-            std::cin >> month;
-            std::cin.ignore();
+            cout << "Enter new year: ";
+            cin >> year;
+            cout << "Enter new month: ";
+            cin >> month;
+            cin.ignore();
             
-            std::cout << "Enter new title: ";
-            std::getline(std::cin, newTitle);
-            std::cout << "Enter new topic: ";
-            std::getline(std::cin, topic);
-            std::cout << "Enter new location: ";
-            std::getline(std::cin, location);
-            std::cout << "Enter new leader: ";
-            std::getline(std::cin, leader);
+            cout << "Enter new title: ";
+            getline(cin, newTitle);
+            cout << "Enter new topic: ";
+            getline(cin, topic);
+            cout << "Enter new location: ";
+            getline(cin, location);
+            cout << "Enter new leader: ";
+            getline(cin, leader);
             
-            std::cout << "Enter number of participants: ";
+            cout << "Enter number of participants: ";
             int numParticipants;
-            std::cin >> numParticipants;
-            std::cin.ignore();
+            cin >> numParticipants;
+            cin.ignore();
             
             for (int i = 0; i < numParticipants; i++) {
-                std::string participant;
-                std::cout << "Enter participant " << (i + 1) << ": ";
-                std::getline(std::cin, participant);
+                string participant;
+                cout << "Enter participant " << (i + 1) << ": ";
+                getline(cin, participant);
                 participants.push_back(participant);
             }
             
-            std::cout << "Enter new result: ";
-            std::getline(std::cin, result);
-            std::cout << "Is it a victory? (1/0): ";
-            std::cin >> isVictory;
-            std::cout << "Enter access level: ";
-            std::cin >> accessLevel;
+            cout << "Enter new result: ";
+            getline(cin, result);
+            cout << "Is it a victory? (1/0): ";
+            cin >> isVictory;
+            cout << "Enter access level: ";
+            cin >> accessLevel;
             
             current->data = Event(year, month, newTitle, topic, location, leader,
                                 participants, result, isVictory, accessLevel);
@@ -159,7 +177,7 @@ void LinkedList::editEvent(const std::string& title) {
         }
         current = current->next;
     }
-    std::cout << "Event not found!" << std::endl;
+    cout << "Event not found!" << endl;
 }
 
 Node* LinkedList::searchByDate(int year, int month) {
@@ -174,7 +192,7 @@ Node* LinkedList::searchByDate(int year, int month) {
     return nullptr;
 }
 
-Node* LinkedList::searchByTopic(const std::string& topic) {
+Node* LinkedList::searchByTopic(const string& topic) {
     Node* current = head;
     while (current) {
         if (current->data.topic == topic) {
@@ -188,17 +206,17 @@ Node* LinkedList::searchByTopic(const std::string& topic) {
 void LinkedList::displayAllTitles() {
     Node* current = head;
     while (current) {
-        std::cout << current->data.title << std::endl;
+        cout << current->data.title << endl;
         current = current->next;
     }
 }
 
-void LinkedList::displayEventsByTopic(const std::string& topic) {
+void LinkedList::displayEventsByTopic(const string& topic) {
     Node* current = head;
     while (current) {
         if (current->data.topic == topic) {
             current->data.displayBasicInfo();
-            std::cout << std::endl;
+            cout << endl;
         }
         current = current->next;
     }
@@ -209,7 +227,7 @@ void LinkedList::displayBulgarianVictories() {
     while (current) {
         if (current->data.isVictory) {
             current->data.displayBasicInfo();
-            std::cout << std::endl;
+            cout << endl;
         }
         current = current->next;
     }
@@ -225,20 +243,22 @@ void LinkedList::setSortOrder(bool ascending) {
 void LinkedList::sortByDate() {
     if (size <= 1) return;
     
-    LinkedList tempList;
-    tempList.ascendingOrder = ascendingOrder;
-    
+    vector<Event> events;
     Node* current = head;
+    
+    // Store all events
     while (current) {
-        Node* next = current->next;
-        current->next = current->prev = nullptr;
-        tempList.insertSorted(current);
-        current = next;
+        events.push_back(current->data);
+        current = current->next;
     }
     
-    head = tempList.head;
-    tail = tempList.tail;
-    tempList.head = tempList.tail = nullptr;
+    // Clear the list
+    clear();
+    
+    // Re-add events in sorted order
+    for (const Event& event : events) {
+        addByDate(event);
+    }
 }
 
 bool LinkedList::isEmpty() {
@@ -257,4 +277,152 @@ void LinkedList::clear() {
     }
     tail = nullptr;
     size = 0;
+}
+
+bool LinkedList::saveToFile(const string& filename) {
+    ofstream file(filename, ios::binary);
+    if (!file) {
+        cout << "Error: Could not open file for writing." << endl;
+        return false;
+    }
+
+    Node* current = head;
+    while (current != nullptr) {
+        // Write year and month
+        file.write(reinterpret_cast<char*>(&current->data.year), sizeof(int));
+        file.write(reinterpret_cast<char*>(&current->data.month), sizeof(int));
+        
+        // Write strings
+        int length;
+        
+        // Write title
+        length = current->data.title.length();
+        file.write(reinterpret_cast<char*>(&length), sizeof(int));
+        file.write(current->data.title.c_str(), length);
+        
+        // Write topic
+        length = current->data.topic.length();
+        file.write(reinterpret_cast<char*>(&length), sizeof(int));
+        file.write(current->data.topic.c_str(), length);
+        
+        // Write location
+        length = current->data.location.length();
+        file.write(reinterpret_cast<char*>(&length), sizeof(int));
+        file.write(current->data.location.c_str(), length);
+        
+        // Write leader
+        length = current->data.leader.length();
+        file.write(reinterpret_cast<char*>(&length), sizeof(int));
+        file.write(current->data.leader.c_str(), length);
+        
+        // Write participants
+        int participantsCount = current->data.participants.size();
+        file.write(reinterpret_cast<char*>(&participantsCount), sizeof(int));
+        for (const string& participant : current->data.participants) {
+            length = participant.length();
+            file.write(reinterpret_cast<char*>(&length), sizeof(int));
+            file.write(participant.c_str(), length);
+        }
+        
+        // Write result
+        length = current->data.result.length();
+        file.write(reinterpret_cast<char*>(&length), sizeof(int));
+        file.write(current->data.result.c_str(), length);
+        
+        // Write isVictory and accessLevel
+        file.write(reinterpret_cast<char*>(&current->data.isVictory), sizeof(bool));
+        file.write(reinterpret_cast<char*>(&current->data.accessLevel), sizeof(int));
+        
+        current = current->next;
+    }
+    
+    file.close();
+    cout << "Data saved successfully to " << filename << endl;
+    return true;
+}
+
+bool LinkedList::loadFromFile(const string& filename) {
+    ifstream file(filename, ios::binary);
+    if (!file) {
+        cout << "Error: Could not open file for reading." << endl;
+        return false;
+    }
+    
+    // Clear existing list
+    clear();
+    
+    while (file.peek() != EOF) {
+        int year, month, length, accessLevel;
+        string title, topic, location, leader, result;
+        vector<string> participants;
+        bool isVictory;
+        
+        // Read year and month
+        file.read(reinterpret_cast<char*>(&year), sizeof(int));
+        file.read(reinterpret_cast<char*>(&month), sizeof(int));
+        
+        // Read title
+        file.read(reinterpret_cast<char*>(&length), sizeof(int));
+        char* buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+        title = string(buffer);
+        delete[] buffer;
+        
+        // Read topic
+        file.read(reinterpret_cast<char*>(&length), sizeof(int));
+        buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+        topic = string(buffer);
+        delete[] buffer;
+        
+        // Read location
+        file.read(reinterpret_cast<char*>(&length), sizeof(int));
+        buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+        location = string(buffer);
+        delete[] buffer;
+        
+        // Read leader
+        file.read(reinterpret_cast<char*>(&length), sizeof(int));
+        buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+        leader = string(buffer);
+        delete[] buffer;
+        
+        // Read participants
+        int participantsCount;
+        file.read(reinterpret_cast<char*>(&participantsCount), sizeof(int));
+        for (int i = 0; i < participantsCount; i++) {
+            file.read(reinterpret_cast<char*>(&length), sizeof(int));
+            buffer = new char[length + 1];
+            file.read(buffer, length);
+            buffer[length] = '\0';
+            participants.push_back(string(buffer));
+            delete[] buffer;
+        }
+        
+        // Read result
+        file.read(reinterpret_cast<char*>(&length), sizeof(int));
+        buffer = new char[length + 1];
+        file.read(buffer, length);
+        buffer[length] = '\0';
+        result = string(buffer);
+        delete[] buffer;
+        
+        // Read isVictory and accessLevel
+        file.read(reinterpret_cast<char*>(&isVictory), sizeof(bool));
+        file.read(reinterpret_cast<char*>(&accessLevel), sizeof(int));
+        
+        // Create and add new event
+        Event event(year, month, title, topic, location, leader, participants, result, isVictory, accessLevel);
+        addByDate(event);
+    }
+    
+    file.close();
+    cout << "Data loaded successfully from " << filename << endl;
+    return true;
 } 

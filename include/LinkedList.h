@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "Event.h"
 
 using namespace std;
@@ -50,6 +51,10 @@ struct LinkedList {
     bool isEmpty();
     int getSize();
     void clear();
+
+    // Data persistence
+    bool saveToFile(const string& filename);
+    bool loadFromFile(const string& filename);
 
 private:
     void insertSorted(Node* newNode);

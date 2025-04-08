@@ -2,25 +2,67 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
+LinkedList eventList; // Global variable for the event list
+
+void clearScreen() {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
+void displayTitle() {
+    ifstream titleFile("title.txt");
+    if (titleFile.is_open()) {
+        string line;
+        while (getline(titleFile, line)) {
+            cout << line << endl;
+        }
+        titleFile.close();
+    }
+}
+
 void displayMenu() {
-    cout << "\nHistorical Events Management System\n";
-    cout << "1. Add new event\n";
-    cout << "2. Edit event\n";
-    cout << "3. Delete event\n";
-    cout << "4. Search by date\n";
-    cout << "5. Search by topic\n";
-    cout << "6. Display all events\n";
-    cout << "7. Display events by topic\n";
-    cout << "8. Display Bulgarian victories\n";
-    cout << "9. Change sort order\n";
-    cout << "0. Exit\n";
+    clearScreen();
+    displayTitle();
+    
+    ifstream menuFile("menu.txt");
+    if (menuFile.is_open()) {
+        string line;
+        bool isMenuSection = false;
+        while (getline(menuFile, line)) {
+            if (line.find("MAIN MENU") != string::npos) {
+                isMenuSection = true;
+            }
+            if (isMenuSection) {
+                cout << line << endl;
+            }
+        }
+        menuFile.close();
+    } else {
+        cout << "\nMAIN MENU\n";
+        cout << "1. Add new event\n";
+        cout << "2. Search events\n";
+        cout << "3. Generate reports\n";
+        cout << "4. Edit event\n";
+        cout << "5. Delete event\n";
+        cout << "6. Save data to file\n";
+        cout << "7. Load data from file\n";
+        cout << "8. Exit\n";
+    }
     cout << "Enter your choice: ";
 }
 
 void addNewEvent(LinkedList& list) {
+    clearScreen();
+    displayTitle();
+    
     int year, month, accessLevel;
     string title, topic, location, leader, result;
     bool isVictory;
@@ -127,11 +169,34 @@ void addNewEvent(LinkedList& list) {
 }
 
 void searchByDate(LinkedList& list) {
+    clearScreen();
+    displayTitle();
+    
     int year, month;
-    cout << "Enter year: ";
-    cin >> year;
-    cout << "Enter month (0 for all months): ";
-    cin >> month;
+    
+    // Year validation
+    do {
+        cout << "Enter year (1000-9999): ";
+        if (!(cin >> year) || year < 1000 || year > 9999) {
+            cout << "Invalid year. Please enter a number between 1000 and 9999.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        break;
+    } while (true);
+
+    // Month validation
+    do {
+        cout << "Enter month (0 for all months, or 1-12): ";
+        if (!(cin >> month) || month < 0 || month > 12) {
+            cout << "Invalid month. Please enter 0 for all months, or a number between 1 and 12.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+        break;
+    } while (true);
     
     Node* result = list.searchByDate(year, month);
     if (result) {
@@ -142,6 +207,9 @@ void searchByDate(LinkedList& list) {
 }
 
 void searchByTopic(LinkedList& list) {
+    clearScreen();
+    displayTitle();
+    
     string topic;
     cout << "Enter topic: ";
     cin.ignore();
@@ -155,76 +223,178 @@ void searchByTopic(LinkedList& list) {
     }
 }
 
-int main() {
-    LinkedList eventList;
-    int choice;
+void searchEvents() {
+    clearScreen();
+    displayTitle();
     
+    cout << "\nSearch Options:\n";
+    cout << "1. Search by date\n";
+    cout << "2. Search by topic\n";
+    cout << "Enter your choice: ";
+    
+    int searchChoice;
+    cin >> searchChoice;
+    
+    switch (searchChoice) {
+        case 1:
+            searchByDate(eventList);
+            break;
+        case 2:
+            searchByTopic(eventList);
+            break;
+        default:
+            cout << "Invalid choice.\n";
+    }
+}
+
+void generateReports() {
+    clearScreen();
+    displayTitle();
+    
+    cout << "\nReport Options:\n";
+    cout << "1. Display all events\n";
+    cout << "2. Display events by topic\n";
+    cout << "3. Display Bulgarian victories\n";
+    cout << "4. Change sort order\n";
+    cout << "Enter your choice: ";
+    
+    int reportChoice;
+    if (!(cin >> reportChoice) || reportChoice < 1 || reportChoice > 4) {
+        cout << "Invalid choice. Please enter a number between 1 and 4.\n";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        return;
+    }
+    
+    switch (reportChoice) {
+        case 1:
+            clearScreen();
+            displayTitle();
+            cout << "\nAll Events:\n";
+            eventList.displayAllTitles();
+            break;
+        case 2: {
+            clearScreen();
+            displayTitle();
+            string topic;
+            cout << "Enter topic: ";
+            cin.ignore();
+            getline(cin, topic);
+            cout << "\nEvents for topic '" << topic << "':\n";
+            eventList.displayEventsByTopic(topic);
+            break;
+        }
+        case 3:
+            clearScreen();
+            displayTitle();
+            cout << "\nBulgarian Victories:\n";
+            eventList.displayBulgarianVictories();
+            break;
+        case 4: {
+            clearScreen();
+            displayTitle();
+            bool ascending;
+            do {
+                cout << "Enter sort order (1 for ascending, 0 for descending): ";
+                if (!(cin >> ascending) && cin.fail()) {
+                    cout << "Invalid input. Please enter 0 or 1.\n";
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    continue;
+                }
+                break;
+            } while (true);
+            eventList.setSortOrder(ascending);
+            cout << "Sort order changed to " << (ascending ? "ascending" : "descending") << ".\n";
+            break;
+        }
+    }
+}
+
+void handleUserChoice(int choice) {
+    string title;
+    
+    switch (choice) {
+        case 1:
+            addNewEvent(eventList);
+            break;
+        case 2:
+            searchEvents();
+            break;
+        case 3:
+            generateReports();
+            break;
+        case 4:
+            clearScreen();
+            displayTitle();
+            cout << "\nEnter event title to edit: ";
+            cin.ignore();
+            getline(cin, title);
+            if (!title.empty()) {
+                eventList.editEvent(title);
+            } else {
+                cout << "Title cannot be empty.\n";
+            }
+            break;
+        case 5:
+            clearScreen();
+            displayTitle();
+            cout << "\nEnter event title to delete: ";
+            cin.ignore();
+            getline(cin, title);
+            if (!title.empty()) {
+                eventList.deleteEvent(title);
+            } else {
+                cout << "Title cannot be empty.\n";
+            }
+            break;
+        case 6:
+            clearScreen();
+            displayTitle();
+            cout << "\nSaving data to file...\n";
+            eventList.saveToFile("historical_events.dat");
+            cout << "Data saved successfully!\n";
+            break;
+        case 7:
+            clearScreen();
+            displayTitle();
+            cout << "\nLoading data from file...\n";
+            eventList.loadFromFile("historical_events.dat");
+            cout << "Data loaded successfully!\n";
+            break;
+        case 8:
+            clearScreen();
+            displayTitle();
+            cout << "\nSaving data before exit...\n";
+            eventList.saveToFile("historical_events.dat");
+            cout << "Thank you for using Historical Events Management System!\n";
+            break;
+    }
+    
+    if (choice != 8) {
+        cout << "\nPress Enter to continue...";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin.get();
+    }
+}
+
+int main() {
+    // Try to load data at startup
+    eventList.loadFromFile("historical_events.dat");
+    
+    int choice;
     do {
         displayMenu();
         cin >> choice;
         
-        switch (choice) {
-            case 1:
-                addNewEvent(eventList);
-                break;
-            case 2: {
-                string title;
-                cout << "Enter title of event to edit: ";
-                cin.ignore();
-                getline(cin, title);
-                eventList.editEvent(title);
-                break;
-            }
-            case 3: {
-                string title;
-                cout << "Enter title of event to delete: ";
-                cin.ignore();
-                getline(cin, title);
-                eventList.deleteEvent(title);
-                break;
-            }
-            case 4:
-                searchByDate(eventList);
-                break;
-            case 5:
-                searchByTopic(eventList);
-                break;
-            case 6:
-                cout << "\nAll Events:\n";
-                eventList.displayAllTitles();
-                break;
-            case 7: {
-                string topic;
-                cout << "Enter topic: ";
-                cin.ignore();
-                getline(cin, topic);
-                eventList.displayEventsByTopic(topic);
-                break;
-            }
-            case 8:
-                cout << "\nBulgarian Victories:\n";
-                eventList.displayBulgarianVictories();
-                break;
-            case 9: {
-                bool ascending;
-                cout << "Enter sort order (1 for ascending, 0 for descending): ";
-                cin >> ascending;
-                eventList.setSortOrder(ascending);
-                break;
-            }
-            case 0:
-                cout << "Exiting program...\n";
-                break;
-            default:
-                cout << "Invalid choice. Please try again.\n";
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            choice = -1;
         }
         
-        if (choice != 0) {
-            cout << "\nPress Enter to continue...";
-            cin.ignore();
-            cin.get();
-        }
-    } while (choice != 0);
+        handleUserChoice(choice);
+    } while (choice != 8);
     
     return 0;
 } 
