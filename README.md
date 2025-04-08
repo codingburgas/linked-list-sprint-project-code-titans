@@ -66,11 +66,6 @@ A C++ project for managing historical events using linked lists.
 2. Select your preferred configuration (Debug/Release) and platform (x86/x64)
 3. Build and run the project (F5)
 
-### Using G++
-```bash
-g++ -o historical_events src/*.cpp -I include/
-```
-
 ## Documentation
 Project documentation can be found in the `docs` directory.
 
