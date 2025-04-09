@@ -25,6 +25,8 @@ void displayTitle() {
             cout << line << endl;
         }
         titleFile.close();
+    } else {
+        cout << "Failed to open title.txt file." << endl;
     }
 }
 
@@ -35,17 +37,13 @@ void displayMenu() {
     ifstream menuFile("menu.txt");
     if (menuFile.is_open()) {
         string line;
-        bool isMenuSection = false;
+        // Read all lines directly, no need to search for MAIN MENU
         while (getline(menuFile, line)) {
-            if (line.find("MAIN MENU") != string::npos) {
-                isMenuSection = true;
-            }
-            if (isMenuSection) {
-                cout << line << endl;
-            }
+            cout << line << endl;
         }
         menuFile.close();
     } else {
+        cout << "Failed to open menu.txt file." << endl;
         cout << "\nMAIN MENU\n";
         cout << "1. Add new event\n";
         cout << "2. Search events\n";
