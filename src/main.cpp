@@ -19,6 +19,11 @@ void clearScreen() {
 
 void displayTitle() {
     ifstream titleFile("title.txt");
+    if (!titleFile.is_open()) {
+        // Try looking in the HistoricalEvents subdirectory
+        titleFile.open("HistoricalEvents/title.txt");
+    }
+    
     if (titleFile.is_open()) {
         string line;
         while (getline(titleFile, line)) {
@@ -35,6 +40,11 @@ void displayMenu() {
     displayTitle();
     
     ifstream menuFile("menu.txt");
+    if (!menuFile.is_open()) {
+        // Try looking in the HistoricalEvents subdirectory
+        menuFile.open("HistoricalEvents/menu.txt");
+    }
+    
     if (menuFile.is_open()) {
         string line;
         // Read all lines directly, no need to search for MAIN MENU
